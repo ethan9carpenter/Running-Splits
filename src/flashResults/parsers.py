@@ -1,8 +1,9 @@
 from .constants import *
 from .wordCheckers import *
 from re import split
-from raceObjects.rac import Race
+from raceObjects import Race
 from tools.generalParser import getTime
+import numpy as np
 
 def readRaceDetails(text):
     return text
@@ -33,8 +34,8 @@ def _findRace(text):
     return None
 
 def buildTable(df):
+    df = _dropNanCols(df)
     columnStartIndex = _getSplitsColStart(df)
-    _dropNanCols(df)
     _parseAllTimes(df, columnStartIndex)
     
     return df
@@ -58,7 +59,10 @@ def _parseTime(df, term):
 def _dropNanCols(df):
     for column in df.columns:
         if str(column) == 'nan':
-            df.drop(column, axis=1, inplace=True)
+            df = df.drop(column, axis=1)
+    df = df[df.columns.dropna()]
+    
+    return df
 
 def _parseSplits(df, columnStartIndex):
     if '[' in str(df.iloc[0][-1]):

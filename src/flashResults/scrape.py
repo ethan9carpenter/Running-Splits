@@ -2,19 +2,25 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import urllib3
-from re import split
 from flashResults import parsers
-from flashResults.meetPage import getAllLinks
+import numpy as np
+from raceObjects import Race
 
 http = urllib3.PoolManager()
 
-def getRace(url, htmlParser='lxml'):
+def getRace(url, htmlParser='lxml', dropOutliers=True):
     table = _getTable(url)
     info = _getInfo(url, htmlParser)
     
-    return {'table': table,
-            'columns': list(table.columns),
-            'raceInfo': info}
+    if dropOutliers:
+        for column in table.columns:
+            try:
+                table[column] = [np.abs(table[column]-table[column].mean()) <= (3*table[column].std())]
+            except:
+                pass
+
+    
+    return Race(table, info)
     
 def _getInfo(url, htmlParser='lxml'):
     page = http.request('GET', url)
@@ -30,23 +36,14 @@ def _getInfo(url, htmlParser='lxml'):
     return content
 
 def _getTable(url):
-
     df = pd.read_html(url)[2]
     
     df.rename(columns=df.iloc[0], inplace=True)
     df.drop(0, inplace=True)
     
     df = parsers.buildTable(df)
+    
     return df
 
 if __name__ == '__main__':
-    url1 = 'http://flashresults.com/2017_Meets/Indoor/01-13_AggieTeam/021-1-02.htm'
-    url2 = 'http://flashresults.com/2016_Meets/Indoor/02-26_SEC/026-1-01.htm'
-    meetURL = 'http://flashresults.com/2016_Meets/Indoor/02-26_SEC/'
-    df = getRace(url2)['table']
-    df.to_pickle('practiceRaceTable.pickle')
-    """
-    for urls in getAllLinks(meetURL):
-        for url in urls:
-            print(getRace(meetURL + url)['raceInfo'])
-    """
+    print(_getTable('http://www.flashresults.com/2017_Meets/Outdoor/06-29_TTSSFO/107-1-01.htm'))
