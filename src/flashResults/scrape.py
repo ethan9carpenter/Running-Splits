@@ -5,12 +5,15 @@ import urllib3
 from flashResults import parsers
 import numpy as np
 from raceObjects import Race
+from .constants import columns as colsToDrop
 
 http = urllib3.PoolManager()
 
 def getRace(url, htmlParser='lxml', dropOutliers=True):
     table = _getTable(url)
     info = _getInfo(url, htmlParser)
+    extraInfo = pd.DataFrame()
+    names = pd.Series()
     
     if dropOutliers:
         for column in table.columns:
@@ -18,9 +21,19 @@ def getRace(url, htmlParser='lxml', dropOutliers=True):
                 table[column] = [np.abs(table[column]-table[column].mean()) <= (3*table[column].std())]
             except:
                 pass
-
+            
+    if 'Athlete' in table.columns:
+        names = table['Athlete']
+    elif 'Team' in table.columns:
+        names = table['Team']
+            
+    for col in colsToDrop:
+        if col in table.columns:
+            extraInfo[col] = table[col]
+            table.drop(col, axis=1, inplace=True)
     
-    return Race(table, info)
+    
+    return Race(table, info, extraInfo, names)
     
 def _getInfo(url, htmlParser='lxml'):
     page = http.request('GET', url)

@@ -27,7 +27,7 @@ def writeAndLoadRaces(url, override=False):
 def buildGraph(sectionLink, how):
     race = getRace(sectionLink)
     df = race.splitsTable
-    info = race.raceName
+    raceName = str(race)
     
     names = race.names
     
@@ -39,12 +39,12 @@ def buildGraph(sectionLink, how):
     y = race.getTimes(how=how)
     
     for i, row in y.iterrows():
-        data = {'x': list(range(1, 1+len(row))), 'y': row, 'name': names[i]}
+        data = {'x': y.columns, 'y': row, 'name': names[i]}
         lines.append(data)
         
-    layout = {'title': info, 
+    layout = {'title': raceName, 
               'xaxis': {'dtick': 1, 'title': 'Lap Number'},
-              'yaxis': {'title': 'Lap Time (Seconds)'}}
+              'yaxis': {'title': how}}
     graph = dcc.Graph(id='example', figure={'data': lines, 'layout': layout})
 
     return graph

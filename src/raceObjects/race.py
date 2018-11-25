@@ -3,14 +3,12 @@ import numpy as np
 
 
 class Race():
-    def __init__(self, splitsTable, raceName):
+    def __init__(self, splitsTable, raceName, extraInfo, names):
         self.splitsTable = splitsTable
         self.raceName = raceName
-        
-        if 'Athlete' in self.splitsTable.columns:
-            self.names = self.splitsTable['Athlete']
-        elif 'Team' in self.splitsTable.columns:
-            self.names = self.splitsTable['Team']
+        self.extraInfo = extraInfo
+        self.names = names
+            
         
     def _cumulative(self):
         cumulative = pd.DataFrame()
@@ -45,4 +43,5 @@ class Race():
         elif how == 'cumulative-difference':
             return self._cumulativeDifference()
         
-        
+    def __str__(self):
+        return self.raceName
