@@ -3,31 +3,28 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from flashResults.constants import columns as colsToDrop
-from flashResults.constants import distance as distanceRaces
+from flashResults.constants import columns as colsToDrop, distance as distanceRaces
 import os, json
+from raceSettingOptions import dropdownSplitOptions  
 
 
-def writeAndLoadRaces(override=False):
+def writeAndLoadRaces(url, override=False):
     if os.path.exists('links.json') and not override:
         with open('links.json', 'r') as file:
             raceMaps = json.load(file)
     else:
-        url = 'http://flashresults.com/2016_Meets/Indoor/02-26_SEC/'
-        url = 'http://www.flashresults.com/2017_Meets/Outdoor/06-29_TTSSFO/'
-        extensions = getAllLinks(url)
+        extensions = getAllLinks(url, True)
         raceMaps = []
-        for urls in extensions:
-            for ext in urls:
-                scr = getRace(url+ext)['raceInfo']
-                if any([distance in scr for distance in distanceRaces]):
-                    raceMaps.append({'label': scr, 'value': url+ext})
+        for ext in extensions:
+            scr = getRace(url+ext)['raceInfo']
+            if any([distance in scr for distance in distanceRaces]):
+                raceMaps.append({'label': scr, 'value': url+ext})
         with open('links.json', 'w') as file:
             json.dump(raceMaps, file)
             
     return raceMaps
 
-def buildGraph(sectionLink, how='splits'):
+def buildGraph(sectionLink, how):
     race = getRace(sectionLink)
     df = race.splitsTable
     info = race.raceName
@@ -39,18 +36,15 @@ def buildGraph(sectionLink, how='splits'):
             df.drop(col, axis=1, inplace=True)
     
     lines = []
-    
     y = race.getTimes(how=how)
     
     for i, row in y.iterrows():
-        
         data = {'x': list(range(1, 1+len(row))), 'y': row, 'name': names[i]}
         lines.append(data)
         
     layout = {'title': info, 
               'xaxis': {'dtick': 1, 'title': 'Lap Number'},
-              'yaxis': {'title': 'Lap Time (Seconds)'}
-              }
+              'yaxis': {'title': 'Lap Time (Seconds)'}}
     graph = dcc.Graph(id='example', figure={'data': lines, 'layout': layout})
 
     return graph
@@ -58,17 +52,14 @@ def buildGraph(sectionLink, how='splits'):
 app = dash.Dash()
 app.config['suppress_callback_exceptions']=True
 
-def initViz(dashApp):
-    raceMaps = writeAndLoadRaces(False)
+def initViz(dashApp, url, overrideData=False):
+    raceMaps = writeAndLoadRaces(url, overrideData)
 
-    # children
+    # graph div
     graph = html.Div(id='graph')
+    # dropdowns
     dropdownRaces = dcc.Dropdown(id='dropdownRaces', options=raceMaps)
-    dropdownCumulative = dcc.Dropdown(id='dropdownCumulative', 
-                            options=[{'label': 'Cumulative', 'value': 'cumulative'}, 
-                                     {'label': 'Split', 'value': 'splits'},
-                                     {'label': 'Split Difference', 'value': 'splits-difference'},
-                                     {'label': 'Cumulative Difference', 'value': 'cumulative-difference'}])
+    dropdownCumulative = dcc.Dropdown(id='dropdownCumulative', options=dropdownSplitOptions)
     
     children = dropdownRaces, dropdownCumulative, graph 
     dashApp.layout = html.Div(children=children)
@@ -80,6 +71,7 @@ def updateGraph(race, cumu):
         return buildGraph(race, cumu)
 
 if __name__ == '__main__':
-    initViz(app)
+    url = 'http://www.flashresults.com/2017_Meets/Outdoor/06-29_TTSSFO/'
+    initViz(app, url)
     app.run_server(debug=True)
 

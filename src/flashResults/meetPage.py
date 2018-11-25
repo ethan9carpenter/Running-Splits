@@ -64,15 +64,18 @@ def _getSections(raceExt, meetURL, htmlParser='lxml'):
 # @return A list of lists.  Each nested list will be for a certain race and each
 # element in the list is a section extension.
 #===============================================================================
-def getAllLinks(meetURL, htmlParser='lxml'):
+def getAllLinks(meetURL, htmlParser='lxml', flat=False):
     races = _getRaces(meetURL, htmlParser)
     urlList = []
     for raceExt in races:
         sections = _getSections(raceExt, meetURL, htmlParser)
         
         if len(sections) > 0:
-            urlList.append(sections)
-        
+            if flat:
+                urlList = urlList + sections
+            else:
+                urlList.append(sections)
+    
     return urlList
     
     

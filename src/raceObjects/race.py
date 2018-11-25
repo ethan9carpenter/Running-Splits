@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 class Race():
     def __init__(self, splitsTable, raceName):
         self.splitsTable = splitsTable
@@ -43,3 +44,5 @@ class Race():
             return self._cumulative()
         elif how == 'cumulative-difference':
             return self._cumulativeDifference()
+        
+        
