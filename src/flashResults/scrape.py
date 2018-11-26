@@ -11,31 +11,43 @@ http = urllib3.PoolManager()
 
 def getRace(url, htmlParser='lxml', dropOutliers=True):
     table = _getTable(url)
-    info = _getInfo(url, htmlParser)
-    extraInfo = pd.DataFrame()
-    names = pd.Series()
+    title = _getTitle(url, htmlParser)
+    names = _getNames(table)
+    splits, extraInfo = _keepSplits(table)
     
     if dropOutliers:
-        for column in table.columns:
-            try:
-                table[column] = [np.abs(table[column]-table[column].mean()) <= (3*table[column].std())]
-            except:
-                pass
-            
-    if 'Athlete' in table.columns:
-        names = table['Athlete']
-    elif 'Team' in table.columns:
-        names = table['Team']
-            
+        table = _dropOutliers(table)
+    
+    return Race(splits, title, extraInfo, names)
+
+def _keepSplits(df):
+    extraInfo = pd.DataFrame()
     for col in colsToDrop:
-        if col in table.columns:
-            extraInfo[col] = table[col]
-            table.drop(col, axis=1, inplace=True)
+        if col in df.columns:
+            extraInfo[col] = df[col]
+            df.drop(col, axis=1, inplace=True)
+            
+    return df, extraInfo
+
+def _getNames(df):
+    if 'Athlete' in df.columns:
+        names = df['Athlete']
+    elif 'Team' in df.columns:
+        names = df['Team']
+    else:
+        names = pd.Series()
     
+    return names
+
+def _dropOutliers(table):
+    for column in table.columns:
+        try:
+            table[column] = [np.abs(table[column]-table[column].mean()) <= 3*table[column].std()]
+        except ValueError:
+            pass
+    return table
     
-    return Race(table, info, extraInfo, names)
-    
-def _getInfo(url, htmlParser='lxml'):
+def _getTitle(url, htmlParser='lxml'):
     page = http.request('GET', url)
     soup = BeautifulSoup(page.data, htmlParser)
     soup = soup.find('table')

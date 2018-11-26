@@ -11,6 +11,8 @@ class Race():
             
         
     def _cumulative(self):
+        raise Exception('something is wrong here')
+    
         cumulative = pd.DataFrame()
         for _, row in self.splitsTable.iterrows():
             row = row.cumsum()

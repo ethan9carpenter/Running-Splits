@@ -26,14 +26,9 @@ def writeAndLoadRaces(url, override=False):
 
 def buildGraph(sectionLink, how):
     race = getRace(sectionLink)
-    df = race.splitsTable
     raceName = str(race)
     
     names = race.names
-    
-    for col in colsToDrop:
-        if col in df.columns:
-            df.drop(col, axis=1, inplace=True)
     
     lines = []
     y = race.getTimes(how=how)
