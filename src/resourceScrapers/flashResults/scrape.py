@@ -2,7 +2,7 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import urllib3
-from flashResults import parsers
+from . import parsers
 import numpy as np
 from raceObjects import Race
 from .constants import columns as colsToDrop

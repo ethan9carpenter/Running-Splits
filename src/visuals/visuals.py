@@ -33,13 +33,16 @@ def buildGraph(sectionLink, how):
     lines = []
     y = race.getTimes(how=how)
     
-    for i, row in y.iterrows():
-        data = {'x': y.columns, 'y': row, 'name': names[i]}
+    for row, name in zip(y.iterrows(), names):
+        data = {'x': y.columns, 
+                'y': row[1], 
+                'name': name}
         lines.append(data)
+        #print(i, len(names))
         
     layout = {'title': raceName, 
               'xaxis': {'dtick': 1, 'title': 'Lap Number'},
-              'yaxis': {'title': how}}
+              'yaxis': {'title': how.replace('-', ' ').title()}}
     graph = dcc.Graph(id='example', figure={'data': lines, 'layout': layout})
 
     return graph

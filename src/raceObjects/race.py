@@ -4,20 +4,24 @@ import numpy as np
 
 class Race():
     def __init__(self, splitsTable, raceName, extraInfo, names):
-        self.splitsTable = splitsTable
-        self.raceName = raceName
+        self.splitsTable = pd.DataFrame(splitsTable)
+        self.raceName = str(raceName)
         self.extraInfo = extraInfo
-        self.names = names
+        self.names = list(names)
             
         
-    def _cumulative(self):
-        raise Exception('something is wrong here')
-    
-        cumulative = pd.DataFrame()
+    def _cumulative(self):    
+        cumDf = []
         for _, row in self.splitsTable.iterrows():
-            row = row.cumsum()
-            cumulative = cumulative.append(row)
-        return cumulative
+            cum = [row[0]]
+            for time in row[1:]:
+                if time is not None:
+                    cumTime = cum[-1] + time
+                    cum.append(cumTime)
+            cumDf.append(cum)
+        cumDf = pd.DataFrame(cumDf, columns=self.splitsTable.columns)
+
+        return cumDf
     
     def _splits(self):
         return self.splitsTable
@@ -25,15 +29,14 @@ class Race():
     def _splitDifference(self):
         df = self.splitsTable
         for column in df:
-            df[column] = np.min(df[column]) - df[column] 
+            df[column] = df[column] - np.min(df[column])
         return df
     
     def _cumulativeDifference(self):
-        cumulative = self._splitDifference()
-        for _, row in self.splitsTable.iterrows():
-            row = row.cumsum()
-            cumulative = cumulative.append(row)
-        return cumulative
+        df = self._cumulative()
+        for column in df:
+            df[column] = df[column] - np.min(df[column])
+        return df
     
     def getTimes(self, how):
         if how == 'splits':
