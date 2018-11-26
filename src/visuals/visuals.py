@@ -1,9 +1,9 @@
-from flashResults import getAllLinks, getRace
+from resourceScrapers.flashResults import getAllLinks, getRace
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from flashResults.constants import columns as colsToDrop, distance as distanceRaces
+from resourceScrapers.flashResults.constants import distance as distanceRaces
 import os, json
 from raceSettingOptions import dropdownSplitOptions  
 
