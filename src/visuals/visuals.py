@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from resourceScrapers.flashResults.constants import distance as distanceRaces
 import os, json
-from raceSettingOptions import dropdownSplitOptions  
+from raceObjects import Meet
 
 
 def writeAndLoadRaces(url, override=False):
@@ -13,12 +13,12 @@ def writeAndLoadRaces(url, override=False):
         with open('links.json', 'r') as file:
             raceMaps = json.load(file)
     else:
-        extensions = getAllLinks(url, True)
+        extensions = getAllLinks(url, flat=True)
         raceMaps = []
         for ext in extensions:
-            scr = getRace(url+ext)['raceInfo']
-            if any([distance in scr for distance in distanceRaces]):
-                raceMaps.append({'label': scr, 'value': url+ext})
+            raceName = getRace(url+ext).raceName
+            if any([distance in raceName for distance in distanceRaces]):
+                raceMaps.append({'label': raceName, 'value': url+ext})
         with open('links.json', 'w') as file:
             json.dump(raceMaps, file)
             
@@ -38,7 +38,6 @@ def buildGraph(sectionLink, how):
                 'y': row[1], 
                 'name': name}
         lines.append(data)
-        #print(i, len(names))
         
     layout = {'title': raceName, 
               'xaxis': {'dtick': 1, 'title': 'Lap Number'},
@@ -48,7 +47,7 @@ def buildGraph(sectionLink, how):
     return graph
 
 app = dash.Dash()
-app.config['suppress_callback_exceptions']=True
+app.config['suppress_callback_exceptions'] = True
 
 def initViz(dashApp, url, overrideData=False):
     raceMaps = writeAndLoadRaces(url, overrideData)
@@ -57,7 +56,11 @@ def initViz(dashApp, url, overrideData=False):
     graph = html.Div(id='graph')
     # dropdowns
     dropdownRaces = dcc.Dropdown(id='dropdownRaces', options=raceMaps)
-    dropdownCumulative = dcc.Dropdown(id='dropdownCumulative', options=dropdownSplitOptions)
+    dropdownCumulative = dcc.Dropdown(id='dropdownCumulative', 
+                                     options=[{'label': 'Cumulative', 'value': 'cumulative'}, 
+                                              {'label': 'Split', 'value': 'splits'},
+                                              {'label': 'Split Difference', 'value': 'splits-difference'},
+                                              {'label': 'Cumulative Difference', 'value': 'cumulative-difference'}])
     
     children = dropdownRaces, dropdownCumulative, graph 
     dashApp.layout = html.Div(children=children)

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-class Race():
+class Race:
     def __init__(self, splitsTable, raceName, extraInfo, names):
         self.splitsTable = pd.DataFrame(splitsTable)
         self.raceName = str(raceName)

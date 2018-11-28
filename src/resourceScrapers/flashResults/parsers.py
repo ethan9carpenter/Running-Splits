@@ -33,6 +33,11 @@ def _findRace(text):
             return Race
     return None
 
+def getMeetName(soup):
+    title = soup.find('p')
+    title = title.get_text()
+    return title
+
 def buildTable(df):
     df = _dropNanCols(df)
     columnStartIndex = _getSplitsColStart(df)

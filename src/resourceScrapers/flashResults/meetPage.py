@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 import urllib3
+from .parsers import getMeetName
+from raceObjects import Meet
 
 http = urllib3.PoolManager()
 
@@ -12,10 +14,7 @@ http = urllib3.PoolManager()
 #
 # @return A list of extensions for each race in the specified meet
 #===============================================================================
-def _getRaces(meetURL, htmlParser='lxml'):
-    resp = http.request('GET', meetURL)
-    soup = BeautifulSoup(resp.data, htmlParser)
-    
+def _getRaces(soup):
     raceExt = []
     
     for link in soup.find_all('a'):
@@ -54,6 +53,12 @@ def _getSections(raceExt, meetURL, htmlParser='lxml'):
             
     return sectionExt
 
+def _getSoup(meetURL, htmlParser='lxml'):
+    resp = http.request('GET', meetURL)
+    soup = BeautifulSoup(resp.data, htmlParser)
+    
+    return soup
+
 #===============================================================================
 # Starts with the meet index page and first parses the race pages using _getRaces
 # then pulls each section with _getSections.
@@ -64,8 +69,8 @@ def _getSections(raceExt, meetURL, htmlParser='lxml'):
 # @return A list of lists.  Each nested list will be for a certain race and each
 # element in the list is a section extension.
 #===============================================================================
-def getAllLinks(meetURL, htmlParser='lxml', flat=False):
-    races = _getRaces(meetURL, htmlParser)
+def getAllLinks(soup, meetURL, htmlParser='lxml', flat=False):
+    races = _getRaces(soup)
     urlList = []
     for raceExt in races:
         sections = _getSections(raceExt, meetURL, htmlParser)
@@ -77,7 +82,12 @@ def getAllLinks(meetURL, htmlParser='lxml', flat=False):
                 urlList.append(sections)
     
     return urlList
-    
-    
+
+def buildMeet(meetURL, flat=False, htmlParser='lxml'):
+    soup = _getSoup(meetURL, htmlParser)
+    links = getAllLinks(soup, meetURL, flat=flat)
+    meetName = getMeetName(soup)
+
+    pass
     
     
